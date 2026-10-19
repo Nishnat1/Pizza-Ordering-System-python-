@@ -1,8 +1,6 @@
 "use server";
 
-import { connectDB } from "@/db/db";
-import { verifyAuth } from "./auth";
-import Order from "@/db/models/order";
+import { apiFetch } from "./apiClient";
 import { CartItem } from "@/app/consumer/context/cartcontext/CartProvider";
 
 export async function createOrder({
@@ -27,39 +25,23 @@ export async function createOrder({
   totalAmount: number;
 }) {
   try {
-    await connectDB();
-    const user = await verifyAuth();
-
-    const orderId = crypto
-      .randomUUID()
-      .replace(/-/g, "")
-      .slice(0, 8)
-      .toUpperCase();
-
-    const order = new Order({
-      orderId,
-      user: user?.id,
-      items,
-      quantity,
-      totalAmount,
-      userInfo: {
+    const response = await apiFetch("/api/orders", {
+      method: "POST",
+      body: JSON.stringify({
         name,
         phone,
-        address: {
-          line1: address,
-          city,
-          pincode,
-        },
-      },
-      paymentMethod,
+        address,
+        city,
+        pincode,
+        paymentMethod,
+        items,
+        quantity,
+        totalAmount,
+      }),
     });
 
-    await order.save();
-
-    return {
-      success: true,
-      message: "Order Created Successfully",
-    };
+    const data = await response.json();
+    return data;
   } catch (err) {
     console.log(err);
     return {

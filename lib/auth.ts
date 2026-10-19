@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { verifyToken } from "./jwt";
-import User from "@/db/models/user";
 
 /**
  * Verifies the current user from cookie. Returns user info or null.
@@ -16,13 +15,12 @@ export async function verifyAuth() {
     }
 
     const decoded = verifyToken(token);
-    const user = await User.findById(decoded.id);
 
-    if (!user) return null;
+    if (!decoded) return null;
 
     return {
-      id: user._id,
-      role: user.role as "ADMIN" | "USER",
+      id: decoded.id,
+      role: decoded.role as "ADMIN" | "USER",
     };
   } catch {
     return null;

@@ -1,13 +1,11 @@
 import AdminDashboardClient from "./AdminDashboardClient";
 import { fetchAdminOrders, fetchAdmins } from "@/lib/adminActions";
 import { verifyAuth } from "@/lib/auth";
-import User from "@/db/models/user";
-import { connectDB } from "@/db/db";
+import { apiFetch } from "@/lib/apiClient";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  await connectDB();
-
-  // Gateway checks are completed in layout.tsx, but verifyAuth helps load current user profile info.
   let authInfo = null;
   try {
     authInfo = await verifyAuth();
@@ -15,11 +13,19 @@ export default async function AdminPage() {
     // Falls back gracefully
   }
 
-  const [orders, admins, dbUser] = await Promise.all([
+  const [orders, admins, meResponse] = await Promise.all([
     fetchAdminOrders(),
     fetchAdmins(),
-    authInfo ? User.findById(authInfo.id) : null,
+    authInfo ? apiFetch("/api/auth/me") : Promise.resolve(null),
   ]);
+
+  let dbUser = null;
+  if (meResponse) {
+    const meData = await meResponse.json();
+    if (meData.success) {
+      dbUser = meData.user;
+    }
+  }
 
   const currentUser = {
     name: dbUser?.name || "Pizza Administrator",

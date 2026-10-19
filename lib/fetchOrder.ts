@@ -1,10 +1,8 @@
-import { connectDB } from "@/db/db";
 import { verifyAuth } from "./auth";
-import Order from "@/db/models/order";
+import { apiFetch } from "./apiClient";
 import { redirect } from "next/navigation";
 
 export default async function fetchOrder() {
-  await connectDB();
   const user = await verifyAuth();
 
   if (!user) {
@@ -12,10 +10,12 @@ export default async function fetchOrder() {
   }
 
   try {
-    const orders = await Order.find({
-      user: user.id,
-    }).sort({ createdAt: -1 });
-    return JSON.parse(JSON.stringify(orders));
+    const response = await apiFetch(`/api/orders/user/${user.id}`);
+    const data = await response.json();
+    if (data.success) {
+      return data.orders;
+    }
+    return [];
   } catch {
     return [];
   }

@@ -1,7 +1,6 @@
 import React from "react";
 import { verifyAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { connectDB } from "@/db/db";
 
 export const metadata = {
   title: "Admin Dashboard — Pizza",
@@ -13,8 +12,6 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await connectDB();
-
   let user = null;
   try {
     user = await verifyAuth();
